@@ -235,6 +235,14 @@ Hence the **Rules of Rules** — the meta-rules of this entire repo:
 
 ---
 
+## Quick start
+
+Want it running now without reading the whole thing? → [`starter/`](starter/) is
+the minimal, drop-in version of Pattern 1: one `CLAUDE.md` rule + one fail-open
+hook, ~2 minutes to install, and the agent starts keeping its own worklog. **This
+is the real answer to "how does the worklog auto-generate"** — not magic, but
+"resident rule + backstop hook + read-back on recovery."
+
 ## Gradual adoption path
 
 Don't adopt all of it at once. This system grew; yours should too:
