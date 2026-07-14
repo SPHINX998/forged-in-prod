@@ -2,6 +2,8 @@
 
 **与 AI 长期协作的工程方法论 —— 每条规则背后，都是一次真实事故**
 
+**中文** | [English](README.en.md)
+
 ![Battle Tested](https://img.shields.io/badge/battle--tested-production-crimson)
 ![Agents](https://img.shields.io/badge/agents-Claude%20Code%20·%20Codex%20·%20any-8A2BE2)
 ![Format](https://img.shields.io/badge/format-markdown%20%2B%20%E7%BA%AA%E5%BE%8B-blue)
