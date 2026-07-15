@@ -180,6 +180,7 @@ Incident three: the same model was fanned out three ways for "independent cross-
 - **Never `git add -A` / `git add .` on a shared tree.** Commit only this round's target files with `git commit --only -- <exact files>`, then verify with `git show --stat` that nothing foreign slipped in
 - **Same model × N paths ≈ an echo chamber.** The value of multiple agents is not voting but **adjudicating on evidence** — give each path a different evidence slice and lens, and let the main thread read the evidence and rule, rather than counting ballots
 - **Concurrency needs a master valve.** Resource ceilings (threads, memory) are explicit configuration, not "it'll probably be fine"
+- **Some code you shouldn't touch even as the main thread.** If it lives in a tree another agent is actively editing *and* it's a sensitive gate (money, migrations, permissions), hand the precise implementation spec to whoever owns that area and let them run their own verification loop — parallel edits collide on the shared tree and skip the checks they owe. What you delegate is the *execution* of the judgment, not the judgment
 
 ```mermaid
 flowchart TD
@@ -208,6 +209,7 @@ Promote anti-over-engineering from *taste* to a **hard boundary**, written into 
 
 - Ship the **smallest closed loop** that meets the requirement: prefer in-place actions, on-by-default, reusing existing mechanisms and pages
 - No standalone pages, parallel infrastructure, or speculative abstractions for small features
+- **Look for the existing mechanism before building one.** Before adding a new gate/rule/special-case, grep the codebase for a built-in that already handles this class of problem — **the best optimization is often discovering the wheel already exists**, and using it beats a second wheel (especially: don't bolt special-case logic onto a sensitive gate)
 - **No reserving** "might need it later" flags, fields, endpoints, or table columns
 - Minimize the configurable surface: only values that business/ops genuinely need to change become config; everything else is a constant
 - **The output of a simplification task must itself be simple** — a three-page document arguing how to delete code is performance art
