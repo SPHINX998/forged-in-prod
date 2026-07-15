@@ -1,0 +1,5 @@
+# Normalize text to LF in the repo. Shell scripts and the hook MUST be LF or they
+# break on Mac/Linux (a CRLF shebang / heredoc terminator is fatal). PowerShell
+# keeps CRLF for native Windows.
+* text=auto eol=lf
+*.ps1 text eol=crlf

@@ -237,11 +237,20 @@ Hence the **Rules of Rules** — the meta-rules of this entire repo:
 
 ## Quick start
 
-Want it running now without reading the whole thing? → [`starter/`](starter/) is
-the minimal, drop-in version of Pattern 1: one `CLAUDE.md` rule + one fail-open
-hook, ~2 minutes to install, and the agent starts keeping its own worklog. **This
-is the real answer to "how does the worklog auto-generate"** — not magic, but
-"resident rule + backstop hook + read-back on recovery."
+Want it running now without reading the whole thing? One command installs the
+whole thing (rule + hook + ledger + decision surfacing) — idempotent, and it never
+overwrites your existing config:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/SPHINX998/forged-in-prod/main/starter/install.sh | sh    # Mac/Linux/WSL/Git-Bash
+```
+```powershell
+iwr -useb https://raw.githubusercontent.com/SPHINX998/forged-in-prod/main/starter/install.ps1 | iex   # Windows PowerShell
+```
+
+Details, manual install, and uninstall are in [`starter/`](starter/). **This is the
+real answer to "how does the worklog auto-generate"** — not magic, but "resident
+rule + backstop hook + read-back on recovery."
 
 ## Gradual adoption path
 
