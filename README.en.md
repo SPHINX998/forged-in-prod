@@ -9,6 +9,12 @@
 ![Format](https://img.shields.io/badge/format-markdown%20%2B%20discipline-blue)
 ![Rules](https://img.shields.io/badge/rules-forged%2C%20not%20designed-black)
 
+### Co-creators
+
+1. **SPHINX998** — initiator and first co-creator; owner of business decisions and final doctrine
+2. **OpenAI Codex** — co-creator of workflow refactoring, long-task orchestration, and engineering validation
+3. **Anthropic Claude** — co-creator of methodology synthesis, adversarial review, and early implementation
+
 > Most "AI coding best practices" out there were designed at a whiteboard.
 >
 > This one was **forged**: it comes from a production system with real paying users and real money flowing through it, hammered out over months of deep collaboration with AI agents — paid for in rework, outages, and actual cash.
@@ -17,7 +23,7 @@
 
 ---
 
-## Six walls you have probably hit
+## Seven walls you have probably hit
 
 If you've let an AI agent (Claude Code / Codex / Cursor / …) work deeply on a **real project** — not a demo — you have run into some of these:
 
@@ -29,8 +35,9 @@ If you've let an AI agent (Claude Code / Codex / Cursor / …) work deeply on a 
 | 🔁 **The recurring pit** | The same trap, once a month, wearing a different costume |
 | 💥 **Mutual trampling** | Multiple agents editing in parallel overwrite each other; a `git add -A` sweeps someone else's half-finished work into history |
 | 🏗️ **Over-engineering** | A one-sentence request comes back as a "platform" with its own page, five config options, and three layers of abstraction |
+| 🕸️ **Long-task sprawl** | An hour-long task fans out blindly before the critical path is known; the main thread drowns in ten reports and duplicate verification while wall-clock time barely moves |
 
-Six walls, six patterns. **Each pattern opens with the incident, then states the rules** — because in the other order, you wouldn't believe it.
+Seven walls, seven patterns. **Each pattern opens with the incident, then states the rules** — because in the other order, you wouldn't believe it.
 
 ---
 
@@ -233,6 +240,31 @@ AI is structurally biased toward over-engineering, because "more complete" looks
 
 ---
 
+## Pattern 7: Long-Task Orchestration — map the critical path before starting
+
+### The incident
+
+A refactor expected to take more than an hour was split into ten parallel branches immediately. Eight results were not yet useful; the hotspot file and final build that controlled wall-clock time were still serial. The main thread then spent substantial context reading ten reports and re-running the critical checks. Everything looked busy, but the task was not faster.
+
+### The rules
+
+- **Long tasks do not fan out automatically.** Start with cheap reconnaissance that produces only the current-stage acceptance/decision gates, critical path, write owners, required branches, and validation path; the research itself still has to be sufficient
+- **Compress the critical path first.** Parallelism only shortens the parallelizable slice. If wall-clock time is dominated by one hotspot file, one build, or one shared prerequisite, run serially
+- **Define “required” by the stage gate.** A branch is required now only if the stage cannot close without its result. If the main line can still close without it, defer it instead of speculatively fanning out
+- **Fan out on demand, not by task size.** Parallelize only when at least two required branches have stable prerequisites, non-conflicting write ownership, independent validation, and enough payoff to cover dispatch, summary, consumption, and verification overhead
+- **Put details in runtime artifacts; consume short receipts.** The artifact preserves complete evidence and process. The receipt declares baseline, coverage denominator, invalidation conditions, and a reproducible entry point. Evaluate invalidation at consumption time; if it cannot be evaluated, reverify
+- **Shift validation left to natural integration boundaries.** Each branch runs a targeted check; validate every completed integrable loop, then actually drive the combined target path after final integration. Do not run the entire suite per branch, and do not wait until the end for the first validation
+- **Failure never silently drops coverage.** A timeout or failed branch must explicitly leave the stage blocked or continue with a declared coverage gap
+- **Coordinator agents, skeptic agents, and layered summaries are optional.** Add them only when branch count, homogeneity, conflict, or risk justifies the extra layer; they are not default ceremony
+
+### Why it works
+
+It protects both boundaries: Amdahl's law prevents parallelism for its own sake, while short receipts and consumption-time invalidation control main-thread context. Acceptance still closes on the real combined path. **It compresses investigation and waiting time; it never makes research, evidence, or validation thinner.**
+
+📄 Companion template: [templates/agent-receipt-template.md](templates/agent-receipt-template.md) *(templates are currently in Chinese — English PRs welcome)*
+
+---
+
 ## The meta-lesson: this system has cut itself twice
 
 Honesty section. This system over-engineered itself too, and the amputations produced rules of their own:
@@ -277,6 +309,7 @@ Don't adopt all of it at once. This system grew; yours should too:
 | **First trap you fall into** | Write your first playbook memory: root cause + trap + lever, three lines |
 | **First cross-task workstream** | Open your first chain doc: current stance / decision chain / open items |
 | **First multi-agent fan-out** | Implementation stays on the main thread; fan-out is investigation-only; parallel writes get isolated worktrees |
+| **First hour-plus task** | Name the stage gate and critical path first; fan out only required branches with positive net payoff, then converge through short receipts |
 | **First time touching money/production** | Apply the 🔴 tier of the verification ladder; rollback plan before launch plan |
 
 ---
