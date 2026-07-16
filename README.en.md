@@ -163,7 +163,7 @@ There is no reliable correlation between the confidence of an AI's success repor
 
 ---
 
-## Pattern 5: Multi-Agent Discipline — parallelize investigation, not implementation
+## Pattern 5: Multi-Agent Discipline — fan out by gates, converge on evidence
 
 ### The incident
 
@@ -173,10 +173,17 @@ Incident two: a dozen concurrent agent threads drove a 20-core / 32 GB workstati
 
 Incident three: the same model was fanned out three ways for "independent cross-validation" — and returned three differently-worded copies of **the same bias**. Majority voting handed the wrong answer *more* confidence.
 
+Incident four: ten agents each returned a wall of process and conclusions. The main thread exhausted its context reading them, then re-ran all ten checks one by one. Every minute saved by parallelism was paid back in merging and duplicate verification.
+
 ### The rules
 
-- **Parallelize investigation, not implementation.** Evidence gathering, inventories, and cross-checks fan out safely to read-only agents; **code is written on the main thread**, or by at most one writer
+- **Reconnoiter cheaply before deciding to fan out.** Reconnaissance names the current-stage acceptance/decision gates, critical path, write owners, required branches, and validation path; it routes the work and never substitutes for sufficient research
+- **Fan out only branches required to close the current gate.** Their prerequisites must be stable, they must run concurrently without conflicting write ownership, each must be independently verifiable, and the wall-clock time saved must cover dispatch, summary, consumption, and verification overhead; otherwise run serially or defer
+- **Parallelize investigation first; default to one implementation writer.** Evidence gathering, inventories, and cross-checks naturally fit read-only fan-out. If writes truly run in parallel, each target has one owner and its own worktree
 - **If you must parallelize writes, isolate physically.** One worktree per subtask, cherry-pick to merge; subtasks that must touch the same files run **sequentially** in one tree
+- **Put detailed evidence in a temporary artifact; return a structured short receipt.** The receipt names the verdict, decision gate, baseline identity, evidence coverage, artifact path, invalidation conditions, and whether the main thread needs it now. Do not open the body by default; open it when it affects the current decision, is high-risk, conflicts, fails a spot check, or the receipt is insufficient
+- **State the coverage denominator.** "True in the three I checked" is not "true in all N." Positive existence claims can be checked at a pointer; negative or completeness claims must include search scope, denominator, exclusions, and whether coverage was exhaustive or sampled
+- **Branch-green is not integration-green.** Each branch runs a targeted check and leaves a reproducible entry point. After merging, the main thread must actually drive the combined target path once; aggregating N self-reported green receipts is not acceptance
 - **Never `git add -A` / `git add .` on a shared tree.** Commit only this round's target files with `git commit --only -- <exact files>`, then verify with `git show --stat` that nothing foreign slipped in
 - **Same model × N paths ≈ an echo chamber.** The value of multiple agents is not voting but **adjudicating on evidence** — give each path a different evidence slice and lens, and let the main thread read the evidence and rule, rather than counting ballots
 - **Concurrency needs a master valve.** Resource ceilings (threads, memory) are explicit configuration, not "it'll probably be fine"
@@ -184,16 +191,20 @@ Incident three: the same model was fanned out three ways for "independent cross-
 
 ```mermaid
 flowchart TD
-    M["Main thread<br/>plan · implement · verify · integrate"]
-    M -->|read-only fan-out| A1["Agent: evidence A"]
-    M -->|read-only fan-out| A2["Agent: evidence B"]
-    M -->|read-only fan-out| A3["Agent: adversarial review"]
-    A1 & A2 & A3 -->|"evidence (not conclusions)"| M
+    S["Cheap reconnaissance<br/>gate · critical path · owner · validation"] --> G{"At least two required independent branches<br/>with positive parallel payoff?"}
+    G -->|no| Q["Main thread runs serially"]
+    G -->|yes| A["Fan out by owner"]
+    A --> R["Short receipts<br/>coverage · baseline · invalidation · artifact"]
+    R --> I["Main-thread adjudication and integration"]
+    Q --> I
+    I --> V["Actually drive the combined target path"]
 ```
 
 ### Why it works
 
-Investigation is idempotent and side-effect-free — naturally parallel. Implementation is stateful and order-dependent — the coordination cost of parallelizing it exceeds the payoff. "Never trust self-reported green" (Pattern 4) and "implementation stays home" are two faces of the same coin: **you can outsource labor; you cannot outsource judgment.**
+Investigation is idempotent and side-effect-free — naturally parallel. Implementation is stateful and order-dependent, so it pays to parallelize only with physical isolation and positive net payoff. Short receipts reduce main-thread cost from "read every process log" to "triage first, open only on trigger," but they do not remove integration validation. "Never trust self-reported green" (Pattern 4) and main-thread adjudication are two faces of the same coin: **you can outsource labor; you cannot outsource judgment.**
+
+📄 Template: [templates/agent-receipt-template.md](templates/agent-receipt-template.md) *(templates are currently in Chinese — English PRs welcome)*
 
 ---
 
@@ -206,6 +217,8 @@ A request at the level of "add a button to the existing page" came back as: a st
 ### The rules
 
 Promote anti-over-engineering from *taste* to a **hard boundary**, written into the rules file the agent reads every single session:
+
+> **Research must be sufficient, evidence complete, and validation strict; the final implementation must use the simplest reliable method that satisfies the requirement.** Simplicity constrains implementation — it never means shallow investigation, partial evidence, or weak validation.
 
 - Ship the **smallest closed loop** that meets the requirement: prefer in-place actions, on-by-default, reusing existing mechanisms and pages
 - No standalone pages, parallel infrastructure, or speculative abstractions for small features
